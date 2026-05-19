@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>晨露影像工作室 — 用 AI 尋回，你記憶中最美的那一刻</title>
+  <style>
+    :root {
+      /* Claude Inspired Warm Palette (OKLch) */
+      --bg:      oklch(97% 0.012 80);  /* Parchment #f5f4ed */
+      --surface: oklch(99% 0.005 80);  /* Ivory #faf9f5 */
+      --fg:      oklch(20% 0.02 60);   /* Anthropic Near Black #141413 */
+      --muted:   oklch(48% 0.015 60);  /* Olive Gray #5e5d59 */
+      --border:  oklch(89% 0.012 80);  /* Border Warm #e8e6dc */
+      --accent:  oklch(58% 0.16 35);   /* Terracotta Brand #c96442 */
+      --accent-soft: oklch(64% 0.13 28); /* Coral Accent */
+
+      --font-display: 'Anthropic Serif', 'Georgia', serif;
+      --font-body:    'Anthropic Sans', 'Arial', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body { 
+      margin: 0; 
+      background: var(--bg); 
+      color: var(--fg); 
+      font-family: var(--font-body);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Film Grain Overlay */
+    .film-grain {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.04;
+    }
+
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .content-wrap { max-width: 720px; margin: 0 auto; }
+
+    section { padding: 80px 0; }
+    .dark-section { background: var(--fg); color: var(--bg); --border: oklch(30% 0.02 60); }
+
+    nav { padding: 32px 0; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-family: var(--font-display); font-size: 24px; font-weight: 500; }
+    .nav-links { display: flex; gap: 32px; font-size: 15px; color: var(--muted); }
+    .nav-links a { text-decoration: none; color: inherit; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--fg); }
+
+    .hero { text-align: center; padding-top: 40px; }
+    .eyebrow { font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 24px; font-weight: 500; }
+    h1 { font-family: var(--font-display); font-size: clamp(40px, 8vw, 72px); line-height: 1.1; margin: 0 0 32px; font-weight: 500; }
+    .tagline { font-size: 22px; color: var(--muted); max-width: 600px; margin: 0 auto 48px; font-family: var(--font-display); font-style: italic; }
+    
+    .btn {
+      display: inline-block;
+      padding: 16px 32px;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      border-radius: 12px;
+      font-weight: 500;
+      transition: transform 0.2s, background 0.2s;
+      box-shadow: 0 4px 20px oklch(58% 0.16 35 / 20%);
+    }
+    .btn:hover { transform: translateY(-2px); background: oklch(50% 0.16 35); }
+
+    .hero-media { 
+      margin-top: 80px;
+      aspect-ratio: 21/9;
+      background: linear-gradient(to bottom, oklch(85% 0.02 80), var(--bg));
+      border-radius: 32px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .hero-media::after {
+      content: "晨光初露般的希望與充滿情感厚度的雋永感";
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--muted);
+      opacity: 0.5;
+    }
+
+    h2 { font-family: var(--font-display); font-size: 42px; margin-bottom: 24px; font-weight: 500; }
+    .intro-text { font-size: 20px; color: var(--muted); line-height: 1.7; }
+
+    .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 64px; }
+    .service-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 40px;
+      border-radius: 24px;
+      transition: transform 0.3s;
+    }
+    .service-card:hover { transform: translateY(-8px); border-color: var(--accent); }
+    .service-icon { width: 48px; height: 48px; background: var(--bg); border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .service-card h3 { font-family: var(--font-display); font-size: 24px; margin-bottom: 16px; }
+    .service-card p { font-size: 16px; color: var(--muted); }
+
+    .story-section { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .story-img { aspect-ratio: 4/5; background: var(--border); border-radius: 32px; overflow: hidden; position: relative; }
+    .story-img::before { content: "攝影師的靈魂 x 資工系的精準"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--muted); font-size: 14px; }
+
+    .footer { padding: 80px 0; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 768px) {
+      .service-grid { grid-template-columns: 1fr; }
+      .story-section { grid-template-columns: 1fr; }
+      h1 { font-size: 48px; }
+      .hero-media { aspect-ratio: 16/9; }
+    }
+  </style>
+</head>
+<body>
+  <svg class="film-grain">
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="0.3" />
+        <feFuncG type="linear" slope="0.3" />
+        <feFuncB type="linear" slope="0.3" />
+      </feComponentTransfer>
+      <feBlend mode="overlay" in2="SourceGraphic" />
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grain)" />
+  </svg>
+
+  <div class="wrap">
+    <nav>
+      <div class="logo">晨露影像工作室</div>
+      <div class="nav-links">
+        <a href="#story">創辦人故事</a>
+        <a href="#services">服務內容</a>
+        <a href="form.html" class="btn" style="padding: 8px 20px; font-size: 14px;">預約報名</a>
+      </div>
+    </nav>
+  </div>
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="eyebrow">晨光初露 · 記憶守護者</div>
+      <h1 data-od-id="headline">尋回，<br>生命中最溫柔的那段回憶</h1>
+      <p class="tagline">我們不只是修復影像的工具，更是您家庭記憶的編排者。在遺忘蔓延之前，讓我們與您一起，把那些碎裂的時光重新組合。</p>
+      <div style="margin-bottom: 32px; font-size: 14px; color: var(--accent); font-style: italic;">
+        溫馨提示：在開啟這段旅程前，請給予自己與長輩足夠的耐心。回憶的開啟有時會伴隨情緒波動，我們隨時在這裡聽您傾訴。
+      </div>
+      <a href="form.html" class="btn">開始尋回記憶</a>
+      
+      <div class="hero-media" data-od-id="hero">
+        <!-- Visual placeholder: A soft, glowing morning light through a window -->
+      </div>
+    </div>
+  </section>
+
+  <section id="story">
+    <div class="wrap">
+      <div class="story-section">
+        <div class="story-img"></div>
+        <div>
+          <div class="eyebrow">我們的初心</div>
+          <h2 data-od-id="story-title">用技術，守護那些快要消失的溫度</h2>
+          <div class="intro-text">
+            <p>攝影不只是捕捉光影，更是為了在未來的某一天，能再次觸摸到當下的情感。身為具備攝影靈魂的技術開發者，我深知長輩面對記憶衰退時的無力感。</p>
+            <p>晨露的誕生，是為了在「AI 時代」找回人的主體性。我們不再讓您獨自面對冷冰冰的 Prompt，而是作為您的「回憶指揮家」，引導您與家人共同拼湊出最動人的生命樂章。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dark-section">
+    <div class="wrap">
+      <div class="content-wrap" style="text-align: center;">
+        <div class="eyebrow" style="color: var(--accent-soft);">全方位的關懷</div>
+        <h2 style="color: white;">不只是技術，更是心的陪伴。</h2>
+        <p style="color: var(--muted); font-size: 18px;">面對回憶的碎片，您不必獨自承擔「整理」的重擔。我們會陪伴您與長輩，一步步走回那個溫馨的午後。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="services">
+    <div class="wrap">
+      <div style="text-align: center;">
+        <div class="eyebrow">我們如何守護</div>
+        <h2>為您的記憶量身打造</h2>
+      </div>
+      
+      <div class="service-grid">
+        <div class="service-card" data-od-id="service-1">
+          <div class="service-icon">🤝</div>
+          <h3>溫柔的對話引導</h3>
+          <p>我們不要求您輸入完美的指令。透過專人與 AI 協同的引導流程，我們像聊天一樣，幫您把零散的片段收攏成完整的故事。</p>
+        </div>
+        <div class="service-card" data-od-id="service-2">
+          <div class="service-icon">🏡</div>
+          <h3>場景深度重建</h3>
+          <p>不只是清晰化，而是「重建」。老家的天井、夕陽的斜率、空氣中的味道，我們用 AI 運算迴圈，為您還原那個記憶中的時空。</p>
+        </div>
+        <div class="service-card" data-od-id="service-3">
+          <div class="service-icon">🎁</div>
+          <h3>永恆的時光禮物</h3>
+          <p>最終交付的不只是一個檔案，而是一份可以傳承的數位家書，讓長輩的智慧與愛，在家族中永遠流傳。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="text-align: center; background: var(--surface);">
+    <div class="wrap">
+      <div class="content-wrap">
+        <h2>準備好尋回那段記憶了嗎？</h2>
+        <p class="muted" style="margin-bottom: 40px;">留下您的聯繫資訊，我們將與您共同開啟這段溫暖的旅程。</p>
+        <a href="form.html" class="btn">填寫預約報名表單</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p>&copy; 2026 晨露影像工作室 Morning Dew Studio. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

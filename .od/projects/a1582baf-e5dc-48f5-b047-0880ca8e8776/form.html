@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>預約您的記憶旅程 — 晨露影像工作室</title>
+  <style>
+    :root {
+      --bg:      oklch(97% 0.012 80);  /* Parchment */
+      --surface: oklch(99% 0.005 80);  /* Ivory */
+      --fg:      oklch(20% 0.02 60);   /* Anthropic Near Black */
+      --muted:   oklch(48% 0.015 60);  /* Olive Gray */
+      --border:  oklch(89% 0.012 80);  /* Border Warm */
+      --accent:  oklch(58% 0.16 35);   /* Terracotta Brand */
+      
+      --font-display: 'Anthropic Serif', 'Georgia', serif;
+      --font-body:    'Anthropic Sans', 'Arial', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    
+    body { 
+      margin: 0; 
+      background: var(--bg); 
+      color: var(--fg); 
+      font-family: var(--font-body);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .film-grain {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.04;
+    }
+
+    .wrap { max-width: 680px; margin: 0 auto; padding: 40px 24px; width: 100%; flex: 1; }
+
+    nav { padding: 32px 0; text-align: center; }
+    .logo { font-family: var(--font-display); font-size: 20px; text-decoration: none; color: inherit; }
+
+    .form-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      padding: 48px;
+      box-shadow: 0 10px 40px oklch(20% 0.02 60 / 5%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      position: absolute;
+      top: 0; left: 0; width: 100%;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    h1 { font-family: var(--font-display); font-size: 28px; margin-bottom: 24px; text-align: center; }
+    .question-text { font-size: 20px; font-family: var(--font-display); margin-bottom: 32px; line-height: 1.4; }
+    .warm-tip { font-size: 14px; color: var(--accent); font-style: italic; margin-bottom: 24px; border-left: 2px solid var(--accent); padding-left: 12px; }
+
+    .form-step { display: none; }
+    .form-step.active { display: block; animation: fadeIn 0.5s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--fg); }
+    input, textarea, select {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-family: inherit;
+      font-size: 16px;
+      margin-bottom: 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(58% 0.16 35 / 10%);
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .scenario-card {
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--bg);
+    }
+    .scenario-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .scenario-card.selected { border-color: var(--accent); background: oklch(58% 0.16 35 / 5%); box-shadow: 0 0 0 2px var(--accent); }
+    .scenario-card h3 { margin: 0 0 8px; font-size: 18px; font-family: var(--font-display); }
+    .scenario-card p { margin: 0; font-size: 14px; color: var(--muted); }
+
+    .price-info {
+      background: oklch(90% 0.01 80);
+      padding: 24px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+    }
+    .price-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .price-card {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .price-card h4 { margin: 0 0 8px; color: var(--accent); }
+    .price-card ul { margin: 0; padding-left: 20px; font-size: 13px; color: var(--muted); }
+
+    .btn-group { display: flex; gap: 12px; margin-top: 32px; }
+    .btn {
+      flex: 1;
+      padding: 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: oklch(50% 0.16 35); }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn-skip {
+      background: transparent;
+      color: var(--muted);
+      font-size: 14px;
+      text-decoration: underline;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Success Card */
+    #success-state {
+      display: none;
+      text-align: center;
+      padding: 64px 32px;
+    }
+    .morning-glow {
+      width: 120px;
+      height: 120px;
+      background: radial-gradient(circle, oklch(90% 0.15 80), transparent);
+      border-radius: 50%;
+      margin: 0 auto 32px;
+      filter: blur(10px);
+      position: relative;
+    }
+    .morning-glow::after {
+      content: "🌅";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+    }
+
+    .success-title { font-family: var(--font-display); font-size: 28px; margin-bottom: 16px; }
+    .success-msg { color: var(--muted); margin-bottom: 40px; }
+
+    .footer { padding: 40px 0; text-align: center; color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <svg class="film-grain">
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+      <feComponentTransfer>
+        <feFuncR type="linear" slope="0.3" />
+        <feFuncG type="linear" slope="0.3" />
+        <feFuncB type="linear" slope="0.3" />
+      </feComponentTransfer>
+      <feBlend mode="overlay" in2="SourceGraphic" />
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grain)" />
+  </svg>
+
+  <nav>
+    <a href="index.html" class="logo">晨露影像工作室</a>
+  </nav>
+
+  <div class="wrap">
+    <div class="form-container" id="main-container">
+      <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+      
+      <div id="form-state">
+        <div id="questions-container">
+          
+          <!-- Q1 -->
+          <div class="form-step active" data-step="1">
+            <div class="warm-tip">溫馨提醒：我們會像老朋友一樣聆聽您的故事。</div>
+            <div class="question-text">您好！這裡是晨露影像，很高興為您服務。請問我們該如何稱呼您？</div>
+            <input type="text" id="q1" placeholder="您的稱呼" required>
+            <div class="btn-group">
+              <button type="button" class="btn" onclick="nextStep()">下一步</button>
+            </div>
+          </div>
+
+          <!-- Q2 -->
+          <div class="form-step" data-step="2">
+            <div class="question-text">請問這次想透過「回憶重建引擎」，為哪位長輩保留或重塑什麼樣的珍貴回憶？</div>
+            <div class="scenario-grid">
+              <div class="scenario-card" onclick="selectScenario(this, '老照片動態化')">
+                <h3>🎞️ 老照片動態化</h3>
+                <p>讓靜止的時光再次流動，看見長輩年輕時的神采。</p>
+              </div>
+              <div class="scenario-card" onclick="selectScenario(this, '聲音修復對話框')">
+                <h3>🎙️ 聲音修復對話</h3>
+                <p>找回那熟悉的叮嚀，跨越時空再次對話。</p>
+              </div>
+              <div class="scenario-card" onclick="selectScenario(this, '虛擬家鄉重建')">
+                <h3>🏡 虛擬家鄉重建</h3>
+                <p>重回那個早已拆遷的院子，走進回憶中的家。</p>
+              </div>
+            </div>
+            <textarea id="q2" rows="3" placeholder="或者您可以直接描述（例如：想看見父親在老家院子裡大笑的樣子...）"></textarea>
+            <div class="btn-group">
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">返回</button>
+              <button type="button" class="btn" onclick="nextStep()">下一步</button>
+            </div>
+          </div>
+
+          <!-- Q3 -->
+          <div class="form-step" data-step="3">
+            <div class="question-text">長輩目前手邊有哪些現成的素材可以讓我們作為 AI 訓練的基底呢？</div>
+            <textarea id="q3" rows="3" placeholder="例如：老照片、錄音檔、舊信件、影片等"></textarea>
+            <div class="btn-group">
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">返回</button>
+              <button type="button" class="btn" onclick="nextStep()">下一步</button>
+              <button type="button" class="btn-skip" onclick="skipStep()">先跳過，稍後再回頭補充</button>
+            </div>
+          </div>
+
+          <!-- Q4 -->
+          <div class="form-step" data-step="4">
+            <div class="question-text" id="q4-echo">了解，既然是要為「某段回憶」重建計畫...</div>
+            <div class="question-text">請問長輩平常習慣使用什麼樣的設備（如手機、平板），對科技產品的操作熟悉度如何？</div>
+            <select id="q4">
+              <option value="">請選擇熟悉度</option>
+              <option value="完全不會使用，需要子女協助">完全不會使用，需要子女協助</option>
+              <option value="會用手機看影片，但不熟操作">會用手機看影片，但不熟操作</option>
+              <option value="基本操作沒問題，能自己開啟 App">基本操作沒問題，能自己開啟 App</option>
+              <option value="科技高手，對新設備有興趣">科技高手，對新設備有興趣</option>
+            </select>
+            <div class="btn-group">
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">返回</button>
+              <button type="button" class="btn" onclick="nextStep()">下一步</button>
+              <button type="button" class="btn-skip" onclick="skipStep()">先跳過，稍後再回頭補充</button>
+            </div>
+          </div>
+
+          <!-- Q5 -->
+          <div class="form-step" data-step="5">
+            <div class="question-text">關於這次的回憶重建計畫，您有沒有預期的完成時間或是為了趕上某個特定的紀念日？</div>
+            <input type="text" id="q5" placeholder="例如：想趕在父親 80 大壽前...">
+            <div class="btn-group">
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">返回</button>
+              <button type="button" class="btn" onclick="nextStep()">下一步</button>
+              <button type="button" class="btn-skip" onclick="skipStep()">先跳過，稍後再回頭補充</button>
+            </div>
+          </div>
+
+          <!-- Q6 -->
+          <div class="form-step" data-step="6">
+            <div class="question-text">我們的專案會根據「互動深度」與「AI 運算迴圈數」來分級，目前的預算範圍大約落在哪裡？</div>
+            <div class="price-info">
+              <div style="font-weight: 500; margin-bottom: 8px;">📖 了解 AI 運算價值差異：</div>
+              <div class="price-grid">
+                <div class="price-card">
+                  <h4>基本版</h4>
+                  <ul>
+                    <li>單次靜態轉動態</li>
+                    <li>基礎畫質修復</li>
+                    <li>適合簡單紀念</li>
+                  </ul>
+                </div>
+                <div class="price-card">
+                  <h4>進階版</h4>
+                  <ul>
+                    <li>無限次 AI 運算迴圈</li>
+                    <li>深度情緒模擬</li>
+                    <li>完整場景 3D 重建</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <input type="text" id="q6" placeholder="預算範圍（如：3萬~5萬）">
+            <div class="btn-group">
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">返回</button>
+              <button type="button" class="btn" onclick="nextStep()">下一步</button>
+              <button type="button" class="btn-skip" onclick="skipStep()">先跳過，稍後再回頭補充</button>
+            </div>
+          </div>
+
+          <!-- Q7 -->
+          <div class="form-step" data-step="7">
+            <div class="question-text">最後，有沒有什麼長輩特別忌諱、或是您希望我們在互動引擎中特別避開的地雷與小細節？</div>
+            <textarea id="q7" rows="3" placeholder="例如：避開某個特定的人物、或是某種顏色..."></textarea>
+            <div class="btn-group">
+              <button type="button" class="btn btn-secondary" onclick="prevStep()">返回</button>
+              <button type="button" class="btn" onclick="finishForm()">生成我的需求規格書</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="success-state">
+        <div class="morning-glow"></div>
+        <h2 class="success-title">規格書已生成</h2>
+        <p class="success-msg">感謝您的分享。我們已根據您的回答，初步組合了一份專屬的「需求規格書」。</p>
+        <div class="btn-group" style="flex-direction: column;">
+          <button class="btn" onclick="downloadSpec()">📥 下載規格書 (.md)</button>
+          <a href="index.html" class="btn btn-secondary" style="text-align: center; text-decoration: none;">回到首頁</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2026 晨露影像工作室. 溫柔傾聽，用心守護。</p>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Firebase config for device-streaming-57547276
+    const firebaseConfig = {
+      apiKey: "AIzaSy...placeholder...", 
+      authDomain: "device-streaming-57547276.firebaseapp.com",
+      projectId: "device-streaming-57547276",
+      storageBucket: "device-streaming-57547276.appspot.com",
+      messagingSenderId: "1234567890",
+      appId: "1:1234567890:web:abcdef"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.finishForm = async function() {
+      saveCurrentAnswer();
+      
+      try {
+        // Generate Markdown
+        const template = await fetch('customer-spec-template.md').then(res => res.text());
+        const placeholderMap = {
+          '{{客戶名}}': answers['q1'] || '（訪客未提供，需由業務接手釐清）',
+          '{{核心痛點}}': answers['q2'] || '（訪客未提供，需由業務接手釐清）',
+          '{{現有素材}}': answers['q3'] || '（訪客未提供，需由業務接手釐清）',
+          '{{設備熟悉度}}': answers['q4'] || '（訪客未提供，需由業務接手釐清）',
+          '{{時程}}': answers['q5'] || '（訪客未提供，需由業務接手釐清）',
+          '{{預算}}': answers['q6'] || '（訪客未提供，需由業務接手釐清）',
+          '{{特殊禁忌}}': answers['q7'] || '（訪客未提供，需由業務接手釐清）'
+        };
+
+        let finalMd = template;
+        for (const [key, val] of Object.entries(placeholderMap)) {
+          finalMd = finalMd.replace(new RegExp(key, 'g'), val);
+        }
+
+        window.generatedMd = finalMd;
+
+        // Write to Firestore
+        await addDoc(collection(db, "submissions"), {
+          raw_answers: answers,
+          markdown_spec: finalMd,
+          created_at: serverTimestamp()
+        });
+
+        // Show success state
+        document.getElementById('form-state').style.display = 'none';
+        document.getElementById('success-state').style.display = 'block';
+        
+        // Clear local storage
+        localStorage.removeItem('dew_answers');
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        alert("提交失敗，請檢查網路連線或 Firebase 設定。");
+      }
+    };
+  </script>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 7;
+    let answers = JSON.parse(localStorage.getItem('dew_answers')) || {};
+    let selectedScenario = "";
+
+    // Load saved answers
+    window.onload = () => {
+      for (let i = 1; i <= totalSteps; i++) {
+        const input = document.getElementById('q' + i);
+        if (input && answers['q' + i]) {
+          input.value = answers['q' + i];
+        }
+      }
+      updateProgress();
+    };
+
+    function updateProgress() {
+      const percent = (currentStep / totalSteps) * 100;
+      const progressEl = document.getElementById('progress');
+      if (progressEl) progressEl.style.width = percent + '%';
+    }
+
+    function selectScenario(el, val) {
+      document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedScenario = val;
+      const q2Input = document.getElementById('q2');
+      if (q2Input && !q2Input.value) q2Input.value = "情境選擇：" + val;
+    }
+
+    function nextStep() {
+      const input = document.getElementById('q' + currentStep);
+      if (input && input.hasAttribute('required') && !input.value) {
+        alert('這題很重要，請讓我們知道您的想法。');
+        return;
+      }
+      
+      saveCurrentAnswer();
+
+      if (currentStep < totalSteps) {
+        document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+        currentStep++;
+        document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+        
+        // Echo logic for Q4
+        if (currentStep === 4) {
+          const q2Val = answers['q2'] || "這段記憶";
+          const echoEl = document.getElementById('q4-echo');
+          if (echoEl) echoEl.innerText = `了解，既然是要為「${q2Val.substring(0, 20)}...」重建回憶，那請問長輩平時習慣用什麼設備來觀看呢？`;
+        }
+        
+        updateProgress();
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+        currentStep--;
+        document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+        updateProgress();
+      }
+    }
+
+    function skipStep() {
+      answers['q' + currentStep] = "";
+      nextStep();
+    }
+
+    function saveCurrentAnswer() {
+      const input = document.getElementById('q' + currentStep);
+      if (input) {
+        answers['q' + currentStep] = input.value;
+        localStorage.setItem('dew_answers', JSON.stringify(answers));
+      }
+    }
+
+    // window.finishForm is now handled in the module script above
+
+    window.downloadSpec = function() {
+      const blob = new Blob([window.generatedMd], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `需求規格書-${answers['q1'] || '未命名'}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+  </script>
+</body>
+</html>
